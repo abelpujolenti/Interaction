@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using OctopusController;
+using UnityEngine.Serialization;
 
 public class IK_Scorpion : MonoBehaviour
 {
@@ -24,12 +25,13 @@ public class IK_Scorpion : MonoBehaviour
     [Header("Legs")]
     public Transform[] legs;
     public Transform[] legTargets;
-    public Transform[] futureLegBases;
+    public Transform[] legFutureBasesRayCasts;
+    public Transform[] legFutureBases;
 
     // Start is called before the first frame update
     void Start()
     {
-        _myController.InitLegs(legs,futureLegBases,legTargets);
+        _myController.InitLegs(legs,legFutureBasesRayCasts,legTargets, legFutureBases);
         _myController.InitTail(tail);
         _startPosition = transform.position;
     }
