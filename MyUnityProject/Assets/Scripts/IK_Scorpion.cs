@@ -11,11 +11,11 @@ public class IK_Scorpion : MonoBehaviour
 
     [Header("Body")]
     float animTime;
-    public float animDuration = 5;
+    public float animDuration;
     bool animPlaying = false;
     public Transform Body;
-    public Transform StartPos;
     public Transform EndPos;
+    private Vector3 _startPosition;
 
     [Header("Tail")]
     public Transform tailTarget;
@@ -31,7 +31,7 @@ public class IK_Scorpion : MonoBehaviour
     {
         _myController.InitLegs(legs,futureLegBases,legTargets);
         _myController.InitTail(tail);
-
+        _startPosition = transform.position;
     }
 
     // Update is called once per frame
@@ -51,7 +51,7 @@ public class IK_Scorpion : MonoBehaviour
 
         if (animTime < animDuration)
         {
-            Body.position = Vector3.Lerp(StartPos.position, EndPos.position, animTime / animDuration);
+            Body.position = Vector3.Lerp(_startPosition, EndPos.position, animTime / animDuration);
         }
         else if (animTime >= animDuration && animPlaying)
         {
