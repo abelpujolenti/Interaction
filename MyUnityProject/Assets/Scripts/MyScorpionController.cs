@@ -25,6 +25,8 @@ namespace OctopusController
         private const float TIME_TO_MOVE_LEG = 0.2f;
         private const float MAXIMUM_HEIGHT_TO_FOOT = 0.3f;
         private const int MAXIMUM_ITERATIONS_FABRIK = 20;
+        private const int LAYER_TERRAIN = 6;
+        private const int LAYER_MASK_TERRAIN = 1 << LAYER_TERRAIN;
 
 
         //TAIL
@@ -50,14 +52,15 @@ namespace OctopusController
         MyTentacleController[] _legs = new MyTentacleController[6];
 
         Transform[] _legTargets;
-        Transform[] _legFutureBases;
+        Transform[] _legFutureBasesRayCasts;
 
+        Vector3[] _desiredFutureBases;
         Vector3[] _currentFeetBases;
         Vector3[] _lastFeetBases;
 
         float[][] _distanceBetweenJoints;
         float[] _legsLength;
-        float[] _legsPositionZLerp;
+        float[] _legsPositionXZLerp;
         float[] _legsPositionYLerp;
 
         bool[] _legsReachCeil;
@@ -66,12 +69,8 @@ namespace OctopusController
 
         bool active = true;
 
-        public bool UpdateIK()
+        public void UpdateIK()
         {
-            if (!active)
-            {
-                return active;
-            }
 
             if (_startLegsAnimation)
             {
@@ -79,24 +78,24 @@ namespace OctopusController
             }
             if (!_startTailAnimation)
             {
-                return active;
+                return;
             }
             UpdateTail();
-            return active;
         }
 
         #region Legs
 
-        public void InitLegs(Transform[] LegRoots, Transform[] LegFutureBases, Transform[] LegTargets)
+        public void InitLegs(Transform[] LegRoots, Transform[] LegFutureBasesRaysCasts, Transform[] LegTargets, Transform[] LegFutureBases)
         {
             _legs = new MyTentacleController[LegRoots.Length];
-            _legFutureBases = new Transform[LegFutureBases.Length];
+            _legFutureBasesRayCasts = new Transform[LegFutureBasesRaysCasts.Length];
             _legTargets = new Transform[LegTargets.Length];
             _legsLength = new float[LegRoots.Length];
             _distanceBetweenJoints = new float[LegRoots.Length][];
-            _currentFeetBases = new Vector3[LegFutureBases.Length];
-            _lastFeetBases = new Vector3[LegFutureBases.Length];
-            _legsPositionZLerp = new float[LegRoots.Length];
+            _desiredFutureBases = new Vector3[LegFutureBasesRaysCasts.Length];
+            _currentFeetBases = new Vector3[LegFutureBasesRaysCasts.Length];
+            _lastFeetBases = new Vector3[LegFutureBasesRaysCasts.Length];
+            _legsPositionXZLerp = new float[LegRoots.Length];
             _legsPositionYLerp = new float[LegRoots.Length];
             _legsReachCeil = new bool[LegRoots.Length];
             _moveLegs = new bool[LegRoots.Length];
@@ -104,7 +103,7 @@ namespace OctopusController
 
             for (int i = 0; i < LegRoots.Length; i++)
             {
-                InitializeLegsValues(LegRoots, LegFutureBases, LegTargets, i);
+                InitializeLegsValues(LegRoots, LegFutureBasesRaysCasts, LegTargets, i);
                 if (i % 2 == 0)
                 {
                     continue;
@@ -113,16 +112,18 @@ namespace OctopusController
             }
         }
 
-        private void InitializeLegsValues(Transform[] LegRoots, Transform[] LegFutureBases, Transform[] LegTargets, int index)
+        private void InitializeLegsValues(Transform[] LegRoots, Transform[] LegFutureBasesRayCasts, Transform[] LegTargets, int index)
         {
             _legs[index] = new MyTentacleController();
             _legs[index].LoadTentacleJoints(LegRoots[index].GetChild(0), TentacleMode.LEG);
-            _legFutureBases[index] = LegFutureBases[index];
+            _legFutureBasesRayCasts[index] = LegFutureBasesRayCasts[index];
             _legTargets[index] = LegTargets[index];
             _distanceBetweenJoints[index] = new float[_legs[index].Bones.Length];
-            _legsPositionZLerp[index] = 0;
+            _legsPositionXZLerp[index] = 0;
             _legsPositionYLerp[index] = 0;
             _currentFeetBases[index] = _legs[index].Bones[0].position;
+            
+            RayCastToTerrain(index);
 
             Transform[] bones = _legs[index].Bones;
 
@@ -156,27 +157,13 @@ namespace OctopusController
         //TODO: implement fabrik method to move legs 
         private void UpdateLegs()
         {
-            int legToCheckMovement;
-            int auxInt;
-            
             for (int i = 0; i < _legs.Length; i++)
             {
-                auxInt = i % 2;
-                if (auxInt == 0)
+                RayCastToTerrain(i);
+                
+                if (CanMoveLeg(i))
                 {
-                    auxInt = 1;
-                }
-                else
-                {
-                    auxInt = -1;
-                }
-
-                legToCheckMovement = i + auxInt;
-
-                if (!_moveLegs[legToCheckMovement])
-                {
-                    if ((_legFutureBases[i].position - _currentFeetBases[i]).magnitude > MAXIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD && 
-                        !_moveLegs[i])
+                    if (HasToMoveLeg(i))
                     {
                         _lastFeetBases[i] = _currentFeetBases[i];
                         _moveLegs[i] = true;    
@@ -184,29 +171,15 @@ namespace OctopusController
                 
                     if (_moveLegs[i])
                     {
-                        _legsPositionZLerp[i] += Time.deltaTime;
+                        
+                        UpdateLerps(i);
+                        
+                        UpdateCurrentFootBase(i);
 
-                        if (!_legsReachCeil[i])
+                        if (HasToStopLeg(i))
                         {
-                            _legsReachCeil[i] = _legsPositionYLerp[i] >= TIME_TO_MOVE_LEG;
-                        }
-
-                        if (_legsReachCeil[i])
-                        {
-                            _legsPositionYLerp[i] -= Time.deltaTime * 2;   
-                        }
-                        else
-                        {
-                            _legsPositionYLerp[i] += Time.deltaTime * 2;
-                        }
-                    
-                        _currentFeetBases[i].z = Mathf.Lerp(_lastFeetBases[i].z, _legFutureBases[i].position.z, _legsPositionZLerp[i] / TIME_TO_MOVE_LEG);
-                        _currentFeetBases[i].y = Mathf.Lerp(_lastFeetBases[i].y,  _lastFeetBases[i].y + MAXIMUM_HEIGHT_TO_FOOT, _legsPositionYLerp[i] / TIME_TO_MOVE_LEG);
-
-                        if ((_legFutureBases[i].position - _currentFeetBases[i]).magnitude < MINIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD)
-                        {
-                            _currentFeetBases[i] = _legFutureBases[i].position;
-                            _legsPositionZLerp[i] = 0;
+                            _currentFeetBases[i] = _desiredFutureBases[i];
+                            _legsPositionXZLerp[i] = 0;
                             _legsPositionYLerp[i] = 0;
                             _legsReachCeil[i] = false;
                             _moveLegs[i] = false;
@@ -216,6 +189,75 @@ namespace OctopusController
                 
                 UpdateLegPos(_legs[i].Bones, _legs[i].EndEffector, i);
             }
+        }
+
+        private bool CanMoveLeg(int index)
+        {
+            int auxInt = index % 2;
+            if (auxInt == 0)
+            {
+                auxInt = 1;
+            }
+            else
+            {
+                auxInt = -1;
+            }
+            
+            int legToCheckMovement = index + auxInt; 
+
+            return !_moveLegs[legToCheckMovement];
+        }
+
+        private bool HasToMoveLeg(int index)
+        {
+            return (_desiredFutureBases[index] - _currentFeetBases[index]).magnitude >
+                   MAXIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD &&
+                   !_moveLegs[index];
+        }
+
+        private void RayCastToTerrain(int index)
+        {
+            RaycastHit hit;
+            if (!Physics.Raycast(_legFutureBasesRayCasts[index].position, Vector3.down, out hit, 1000,
+                    LAYER_MASK_TERRAIN))
+            {
+                return;
+            }
+            _desiredFutureBases[index] = hit.point;
+        }
+
+        private void UpdateLerps(int index)
+        {
+            _legsPositionXZLerp[index] += Time.deltaTime;
+
+            if (!_legsReachCeil[index])
+            {
+                _legsReachCeil[index] = _legsPositionYLerp[index] >= TIME_TO_MOVE_LEG;
+            }
+
+            if (_legsReachCeil[index])
+            {
+                _legsPositionYLerp[index] -= Time.deltaTime * 2;   
+            }
+            else
+            {
+                _legsPositionYLerp[index] += Time.deltaTime * 2;
+            }
+        }
+
+        private void UpdateCurrentFootBase(int index)
+        {
+            float initialYPosition = _legsReachCeil[index] ? _desiredFutureBases[index].y : _lastFeetBases[index].y;
+            
+            _currentFeetBases[index].z = Mathf.Lerp(_lastFeetBases[index].z, _desiredFutureBases[index].z, _legsPositionXZLerp[index] / TIME_TO_MOVE_LEG);
+            _currentFeetBases[index].x = Mathf.Lerp(_lastFeetBases[index].x, _desiredFutureBases[index].x, _legsPositionXZLerp[index] / TIME_TO_MOVE_LEG);
+            _currentFeetBases[index].y = Mathf.Lerp(initialYPosition,  _desiredFutureBases[index].y + MAXIMUM_HEIGHT_TO_FOOT, _legsPositionYLerp[index] / TIME_TO_MOVE_LEG);
+        }
+
+        private bool HasToStopLeg(int index)
+        {
+            return (_desiredFutureBases[index] - _currentFeetBases[index]).magnitude <
+                   MINIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD;
         }
 
         private bool DidFootReachDestination(Transform foot, int index)
