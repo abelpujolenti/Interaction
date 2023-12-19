@@ -21,7 +21,7 @@ public class IK_Scorpion : MonoBehaviour
     public Transform EndPos;
     public Transform _pointToLookAt;
     public float speedToRotate;
-    public float speedToElevate;
+    public float speedToMove;
     private Vector3 _startPosition;
     private Vector3 _normalRotationVector;
     private Vector3 _bodyPosition;
@@ -115,7 +115,7 @@ public class IK_Scorpion : MonoBehaviour
         _bodyPosition = hit.point + vectorFromTerrainToBodyNormalized * _distanceToFloor;
         _bodyPosition.z = Mathf.Lerp(_startPosition.z, EndPos.position.z, animTime / animDuration);
 
-        Body.position = Vector3.Lerp(Body.position, _bodyPosition, speedToElevate * Time.deltaTime);
+        Body.position = Vector3.Lerp(Body.position, _bodyPosition, speedToMove * Time.deltaTime);
     }
 
     private void UpdateBodyRotation()
