@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 
 namespace OctopusController
@@ -57,6 +58,7 @@ namespace OctopusController
         Vector3[] _desiredFutureBases;
         Vector3[] _currentFeetBases;
         Vector3[] _lastFeetBases;
+        Vector3[] _legsTerrainNormal;
 
         float[][] _distanceBetweenJoints;
         float[] _legsLength;
@@ -83,9 +85,25 @@ namespace OctopusController
             UpdateTail();
         }
 
+        #region Body
+
+        public Vector3 GetMedianNormalTerrain() {
+
+            Vector3 medianVector = Vector3.zero;
+
+            for (int i = 0; i < _legsTerrainNormal.Length; i++)
+            {
+                medianVector += _legsTerrainNormal[i];
+            }
+
+            return medianVector / _legsTerrainNormal.Length;
+        }
+
+        #endregion
+
         #region Legs
 
-        public void InitLegs(Transform[] LegRoots, Transform[] LegFutureBasesRaysCasts, Transform[] LegTargets, Transform[] LegFutureBases)
+        public void InitLegs(Transform[] LegRoots, Transform[] LegFutureBasesRaysCasts, Transform[] LegTargets)
         {
             _legs = new MyTentacleController[LegRoots.Length];
             _legFutureBasesRayCasts = new Transform[LegFutureBasesRaysCasts.Length];
@@ -99,6 +117,7 @@ namespace OctopusController
             _legsPositionYLerp = new float[LegRoots.Length];
             _legsReachCeil = new bool[LegRoots.Length];
             _moveLegs = new bool[LegRoots.Length];
+            _legsTerrainNormal = new Vector3[LegRoots.Length];
             //Legs init
 
             for (int i = 0; i < LegRoots.Length; i++)
@@ -223,6 +242,7 @@ namespace OctopusController
             {
                 return;
             }
+            _legsTerrainNormal[index] = hit.normal;
             _desiredFutureBases[index] = hit.point;
         }
 
@@ -496,7 +516,7 @@ namespace OctopusController
             return newMin + (value - originalMin) * (newMax - newMin) / (originalMax - originalMin);
         }
 
-        internal float Deg2Rad(float angle)
+        public float Deg2Rad(float angle)
         {
             return angle * ((float)Math.PI / 180f);
         }
