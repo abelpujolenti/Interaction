@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEditor;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 
@@ -94,6 +95,14 @@ namespace OctopusController
         #region private and internal methods
         //todo: add here anything that you need
 
+        public static void DecomposeSwingTwist ( Quaternion q, Vector3 twistAxis, out Quaternion swing, out Quaternion twist)
+        {
+            Vector3 r = new Vector3(q.x, q.y, q.z);
+            Vector3 p = Vector3.Project(r, twistAxis);
+            twist = new Quaternion(p.x, p.y, p.z, q.w).normalized;
+            swing = q * Quaternion.Inverse(twist);
+        }
+
         void update_ccd()
         {
 
@@ -105,12 +114,25 @@ namespace OctopusController
                     Transform tipBone = _tentacles[i].Bones[_tentacles[i].Bones.Length - 1];
                     Vector3 target = _randomTargets[i].position + _targetOffsets[i];
 
-
                     Vector3 currentToTip = (tipBone.position - currentBone.position).normalized;
                     Vector3 currentToTarget = (target - currentBone.position).normalized;
 
                     Quaternion q = Quaternion.FromToRotation(currentToTip, currentToTarget);
-                    currentBone.rotation = q * currentBone.rotation;
+
+                    Quaternion qTwist;
+                    Quaternion qSwing;
+                    DecomposeSwingTwist(q, currentBone.transform.up, out qSwing, out qTwist);
+
+                    Quaternion newRotation = qSwing * currentBone.rotation;
+
+                    Quaternion constrainedRotation = Quaternion.RotateTowards(currentBone.rotation, newRotation, _swingMax * Mathf.Deg2Rad);
+                    
+                    currentBone.rotation = newRotation;
+
+                    Vector3 vr = currentBone.localRotation.eulerAngles;
+                    vr.y = 0f;
+                    currentBone.localRotation = Quaternion.Euler(vr);
+
                 }
             }
         }
