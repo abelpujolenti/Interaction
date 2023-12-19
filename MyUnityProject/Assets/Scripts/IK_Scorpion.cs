@@ -6,6 +6,9 @@ using UnityEngine.Serialization;
 
 public class IK_Scorpion : MonoBehaviour
 {
+    private const int LAYER_TERRAIN = 6;
+    private const int LAYER_MASK_TERRAIN = 1 << LAYER_TERRAIN;
+    
     MyScorpionController _myController= new MyScorpionController();
 
     public IK_tentacles _myOctopus;
@@ -18,8 +21,11 @@ public class IK_Scorpion : MonoBehaviour
     public Transform EndPos;
     public Transform _pointToLookAt;
     public float speedToRotate;
+    public float speedToElevate;
     private Vector3 _startPosition;
     private Vector3 _normalRotationVector;
+    private Vector3 _bodyPosition;
+    private float _distanceToFloor;
 
     [Header("Tail")]
     public Transform tailTarget;
@@ -39,7 +45,20 @@ public class IK_Scorpion : MonoBehaviour
         _myController.InitTail(tail);
         _startPosition = transform.position;
         _normalRotationVector = Body.position + Vector3.up;
-        _pointToLookAt.position = _normalRotationVector; 
+        _pointToLookAt.position = _normalRotationVector;
+        _bodyPosition = Body.position;
+        
+        RaycastHit hit = RaycastToTerrain();
+
+        _distanceToFloor = (hit.point - _bodyPosition).magnitude;
+    }
+
+    private RaycastHit RaycastToTerrain()
+    {
+        RaycastHit hit;
+        Physics.Raycast(_bodyPosition, -Body.up, out hit, 1000, LAYER_MASK_TERRAIN);
+
+        return hit;
     }
 
     // Update is called once per frame
@@ -62,15 +81,17 @@ public class IK_Scorpion : MonoBehaviour
             animTime = 0;
             animPlaying = true;
         }
-
-        if (animTime < animDuration)
+        
+        UpdateBodyPosition();
+        
+        if (animPlaying)
         {
-            Body.position = Vector3.Lerp(_startPosition, EndPos.position, animTime / animDuration);
-        }
-        else if (animTime >= animDuration && animPlaying)
-        {
-            Body.position = EndPos.position;
-            animPlaying = false;
+            UpdateBodyPosition();
+            if (Vector3.Distance(Body.position, EndPos.position) < 0.1f)
+            {
+                Body.position = EndPos.position;
+                animPlaying = false;
+            }
         }
 
         _myController.UpdateIK();
@@ -79,27 +100,37 @@ public class IK_Scorpion : MonoBehaviour
         {
             return;
         }
+        
+        UpdateBodyRotation();
+    }
 
+    private void UpdateBodyPosition()
+    {
+        //_bodyPosition = Vector3.Lerp(_startPosition, EndPos.position, animTime / animDuration);
+        
+        RaycastHit hit = RaycastToTerrain();
+
+        Vector3 vectorFromTerrainToBodyNormalized = (Body.position - hit.point).normalized;
+
+        _bodyPosition = hit.point + vectorFromTerrainToBodyNormalized * _distanceToFloor;
+        _bodyPosition.z = Mathf.Lerp(_startPosition.z, EndPos.position.z, animTime / animDuration);
+
+        Body.position = Vector3.Lerp(Body.position, _bodyPosition, speedToElevate * Time.deltaTime);
+    }
+
+    private void UpdateBodyRotation()
+    {
         _normalRotationVector = _myController.GetMedianNormalTerrain();
 
-        Debug.Log(Body.position + _normalRotationVector);
-        Debug.Log(_pointToLookAt.position);
-
-        Debug.DrawLine(Body.position, Body.position + _normalRotationVector, Color.red, 100);
-        Debug.DrawLine(Body.position, _pointToLookAt.position, Color.blue, 100);
-
         _pointToLookAt.position = Vector3.Lerp(_pointToLookAt.position, _normalRotationVector + Body.position, speedToRotate * Time.deltaTime);
-
+        
         Vector3 vectorToPointToLookAt = (_pointToLookAt.position - Body.position).normalized;
-
         float cosine = Vector3.Dot(Body.up, vectorToPointToLookAt);
-        float angle = _myController.Rad2Deg(cosine);
+        float angle = _myController.Rad2Deg(Mathf.Acos(cosine));
         Vector3 crossVector = Vector3.Cross(Body.up, vectorToPointToLookAt);
         Body.rotation = Quaternion.AngleAxis(angle, crossVector) * Body.rotation;
-
-        active = false;
     }
-    
+
     //Function to send the tail target transform to the dll
     public void NotifyTailTarget()
     {
