@@ -237,7 +237,7 @@ namespace OctopusController
         private void RayCastToTerrain(int index)
         {
             RaycastHit hit;
-            if (!Physics.Raycast(_legFutureBasesRayCasts[index].position, Vector3.down, out hit, 1000,
+            if (!Physics.Raycast(_legFutureBasesRayCasts[index].position, -_legFutureBasesRayCasts[index].up, out hit, 1000,
                     LAYER_MASK_TERRAIN))
             {
                 return;
@@ -516,7 +516,7 @@ namespace OctopusController
             return newMin + (value - originalMin) * (newMax - newMin) / (originalMax - originalMin);
         }
 
-        public float Deg2Rad(float angle)
+        private float Deg2Rad(float angle)
         {
             return angle * ((float)Math.PI / 180f);
         }
