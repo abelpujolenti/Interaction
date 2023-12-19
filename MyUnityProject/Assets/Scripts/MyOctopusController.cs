@@ -117,22 +117,21 @@ namespace OctopusController
                     Vector3 currentToTip = (tipBone.position - currentBone.position).normalized;
                     Vector3 currentToTarget = (target - currentBone.position).normalized;
 
-                    Quaternion q = Quaternion.FromToRotation(currentToTip, currentToTarget);
+                    Vector3 axis = Vector3.Cross(currentToTip, currentToTarget);
+                    float angle = Mathf.Min(_swingMax, Vector3.Angle(currentToTip, currentToTarget));
+                    Quaternion q = Quaternion.AngleAxis(angle, axis);
 
                     Quaternion qTwist;
                     Quaternion qSwing;
-                    DecomposeSwingTwist(q, currentBone.transform.up, out qSwing, out qTwist);
+                    DecomposeSwingTwist(q, currentToTip.normalized, out qSwing, out qTwist);
 
-                    Quaternion newRotation = qSwing * currentBone.rotation;
+                    Quaternion newRotation = qSwing * currentBone.transform.rotation;
 
-                    Quaternion constrainedRotation = Quaternion.RotateTowards(currentBone.rotation, newRotation, _swingMax * Mathf.Deg2Rad);
-                    
-                    currentBone.rotation = newRotation;
+                    currentBone.transform.rotation = newRotation;
 
                     Vector3 vr = currentBone.localRotation.eulerAngles;
-                    vr.y = 0f;
+                    vr.y = Mathf.Min(_twistMax, vr.y);
                     currentBone.localRotation = Quaternion.Euler(vr);
-
                 }
             }
         }
