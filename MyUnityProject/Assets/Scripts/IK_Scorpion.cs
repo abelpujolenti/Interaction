@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using OctopusController;
 using UnityEngine;
-using OctopusController;
 using UnityEngine.Serialization;
 
 public class IK_Scorpion : MonoBehaviour
@@ -16,15 +14,16 @@ public class IK_Scorpion : MonoBehaviour
     [Header("Body")]
     float animTime;
     public float animDuration;
-    bool animPlaying = false;
+    bool animPlaying;
     public Transform Body;
     public Transform EndPos;
     public Transform _pointToLookAt;
     public float speedToRotate;
+    public float speedToMove;
     public float speedToElevate;
-    private Vector3 _startPosition;
     private Vector3 _normalRotationVector;
-    private Vector3 _bodyPosition;
+    private Vector3 _desiredBodyPosition;
+    public Transform _pointToFollow;
     private float _distanceToFloor;
 
     [Header("Tail")]
@@ -36,27 +35,26 @@ public class IK_Scorpion : MonoBehaviour
     public Transform[] legTargets;
     public Transform[] legFutureBasesRayCasts;
 
-    private bool active = true;
-
     // Start is called before the first frame update
     void Start()
     {
         _myController.InitLegs(legs,legFutureBasesRayCasts,legTargets);
         _myController.InitTail(tail);
-        _startPosition = transform.position;
         _normalRotationVector = Body.position + Vector3.up;
         _pointToLookAt.position = _normalRotationVector;
-        _bodyPosition = Body.position;
+        _pointToFollow.position = Body.position;
         
         RaycastHit hit = RaycastToTerrain();
 
-        _distanceToFloor = (hit.point - _bodyPosition).magnitude;
+        _distanceToFloor = (hit.point - _pointToFollow.position).magnitude;
+        
+        Debug.Log(_distanceToFloor);
     }
 
     private RaycastHit RaycastToTerrain()
     {
         RaycastHit hit;
-        Physics.Raycast(_bodyPosition, -Body.up, out hit, 1000, LAYER_MASK_TERRAIN);
+        Physics.Raycast(Body.position, -Body.up, out hit, 1000, LAYER_MASK_TERRAIN);
 
         return hit;
     }
@@ -64,12 +62,6 @@ public class IK_Scorpion : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-        if (!active)
-        {
-            return;
-        }
-
         if(animPlaying)
             animTime += Time.deltaTime;
 
@@ -82,11 +74,11 @@ public class IK_Scorpion : MonoBehaviour
             animPlaying = true;
         }
         
-        UpdateBodyPosition();
-        
         if (animPlaying)
         {
             UpdateBodyPosition();
+            UpdateBodyRotation();
+            
             if (Vector3.Distance(Body.position, EndPos.position) < 0.1f)
             {
                 Body.position = EndPos.position;
@@ -95,27 +87,20 @@ public class IK_Scorpion : MonoBehaviour
         }
 
         _myController.UpdateIK();
-
-        if (!animPlaying)
-        {
-            return;
-        }
-        
-        UpdateBodyRotation();
     }
 
     private void UpdateBodyPosition()
     {
-        //_bodyPosition = Vector3.Lerp(_startPosition, EndPos.position, animTime / animDuration);
-        
         RaycastHit hit = RaycastToTerrain();
 
         Vector3 vectorFromTerrainToBodyNormalized = (Body.position - hit.point).normalized;
 
-        _bodyPosition = hit.point + vectorFromTerrainToBodyNormalized * _distanceToFloor;
-        _bodyPosition.z = Mathf.Lerp(_startPosition.z, EndPos.position.z, animTime / animDuration);
-
-        Body.position = Vector3.Lerp(Body.position, _bodyPosition, speedToElevate * Time.deltaTime);
+        Vector3 bodyPosition = hit.point + vectorFromTerrainToBodyNormalized * _distanceToFloor;
+        
+        _desiredBodyPosition = _pointToFollow.position;
+        _desiredBodyPosition.y = bodyPosition.y;
+        
+        Body.position = Vector3.Lerp(Body.position, _desiredBodyPosition, speedToMove * Time.deltaTime);
     }
 
     private void UpdateBodyRotation()
@@ -129,6 +114,12 @@ public class IK_Scorpion : MonoBehaviour
         float angle = _myController.Rad2Deg(Mathf.Acos(cosine));
         Vector3 crossVector = Vector3.Cross(Body.up, vectorToPointToLookAt);
         Body.rotation = Quaternion.AngleAxis(angle, crossVector) * Body.rotation;
+
+        Vector3 vectorToFollow = (_desiredBodyPosition - Body.position).normalized;
+        cosine = Vector3.Dot(-Body.forward, vectorToFollow);
+        angle = _myController.Rad2Deg(Mathf.Acos(cosine));
+        crossVector = Vector3.Cross(-Body.forward, vectorToFollow);
+        Body.rotation = Quaternion.AngleAxis(angle, crossVector) * Body.rotation;
     }
 
     //Function to send the tail target transform to the dll
@@ -140,7 +131,6 @@ public class IK_Scorpion : MonoBehaviour
     //Trigger Function to start the walk animation
     public void NotifyStartWalk()
     {
-
         _myController.NotifyStartWalk();
     }
 }

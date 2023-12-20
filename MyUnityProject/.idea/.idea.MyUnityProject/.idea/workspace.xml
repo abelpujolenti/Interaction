@@ -5,10 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="258d9691-274c-49c1-80ed-564bf0d7d6b3" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Route.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.MyUnityProject/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.MyUnityProject/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/octopus_landscape_with_ball_v2.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/octopus_landscape_with_ball_v2.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/BezierCurves.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/BezierCurves.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Route.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/IK_Scorpion.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/IK_Scorpion.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/IK_tentacles.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/IK_tentacles.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/LightBlink.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/LightBlink.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/MovingTarget.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/MovingTarget.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/MyOctopusController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/MyOctopusController.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/MyScorpionController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/MyScorpionController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/MyTentacleController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/MyTentacleController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/NotifyRegion.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/NotifyRegion.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,7 +33,7 @@
     <setting file="mock:///Dummy.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///Dummy.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///Dummy.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///Dummy.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/Route.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
@@ -40,7 +48,7 @@
     &quot;Attach to Unity Editor.Attach to Unity Editor.executor&quot;: &quot;Debug&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/CharacterRotation&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/Route&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -83,10 +91,10 @@
       </option>
       <method v="2" />
     </configuration>
-    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost">
+    <configuration name="Attach to Unity Editor" type="UNITY_DEBUG_RUN_CONFIGURATION" factoryName="Unity Debug" show_console_on_std_err="false" show_console_on_std_out="false" port="50000" address="localhost" ignored-value-for-modified-check="7744">
       <option name="allowRunningInParallel" value="false" />
       <option name="listenPortForConnections" value="false" />
-      <option name="pid" />
+      <option name="pid" value="7744" />
       <option name="projectPathOnTarget" />
       <option name="selectedOptions">
         <list />
@@ -106,7 +114,9 @@
       <workItem from="1702726358658" duration="1816000" />
       <workItem from="1702733633090" duration="7287000" />
       <workItem from="1703008477309" duration="4532000" />
-      <workItem from="1703014576869" duration="763000" />
+      <workItem from="1703014576869" duration="3108000" />
+      <workItem from="1703082745001" duration="44000" />
+      <workItem from="1703082799531" duration="11465000" />
     </task>
     <servers />
   </component>
@@ -121,8 +131,12 @@
   <component name="XDebuggerManager">
     <watches-manager>
       <configuration name="UNITY_DEBUG_RUN_CONFIGURATION">
-        <watch expression="_legFutureBases[index].position" language="C#" />
-        <watch expression="_desiredFutureBases[index]" language="C#" />
+        <watch expression="_currentCurve" language="C#" />
+        <watch expression="_exteriorSegmentPoints" language="C#" />
+        <watch expression="_midSegmentPoints" language="C#" />
+        <watch expression="_firstTangents" language="C#" />
+        <watch expression="_secondTangents" language="C#" />
+        <watch expression="_points" language="C#" />
       </configuration>
     </watches-manager>
   </component>
