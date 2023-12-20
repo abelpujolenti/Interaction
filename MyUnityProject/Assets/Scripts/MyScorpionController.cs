@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.SymbolStore;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
-using UnityEngine.UIElements;
-
 
 namespace OctopusController
 {
@@ -190,7 +183,6 @@ namespace OctopusController
                 
                     if (_moveLegs[i])
                     {
-                        
                         UpdateLerps(i);
                         
                         UpdateCurrentFootBase(i);
