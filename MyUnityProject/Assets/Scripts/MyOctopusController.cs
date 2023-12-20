@@ -93,29 +93,19 @@ namespace OctopusController
         public void StopBall(Transform ballTransform)
         {
             _ball = ballTransform;
-            int closest = 0;
             for (int i = 1; i < _randomTargets.Length; i++)
             {
-                if (Vector3.Distance(ballTransform.position, _randomTargets[closest].position) > Vector3.Distance(ballTransform.position, _randomTargets[i].position))
+                if (Vector3.Distance(ballTransform.position, _randomTargets[i].position) < 13f)
                 {
-                    closest = i;
+                    _targetBall[i] = true;
                 }
             }
 
-            _targetBall[closest] = true;
         }
 
         public void SetIdle()
         {
             _targetBall = new bool[_randomTargets.Length];
-        }
-
-        public IEnumerator test()
-        {
-            yield return new WaitForSeconds(3f);
-            StopBall(GameObject.Find("cbt").transform);
-            yield return new WaitForSeconds(10f);
-            SetIdle();
         }
 
         #endregion

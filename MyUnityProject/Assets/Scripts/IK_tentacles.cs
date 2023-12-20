@@ -67,7 +67,6 @@ public class IK_tentacles : MonoBehaviour
         
         _myController.TestLogging(gameObject.name);
         _myController.Init(_tentacles, _randomTargets);
-        StartCoroutine(_myController.test());
 
         _myController.TwistMax = _twistMax;
         _myController.TwistMin = _twistMin;
