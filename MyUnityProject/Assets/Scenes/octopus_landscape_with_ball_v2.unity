@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657874, g: 0.49641275, b: 0.5748171, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1191,8 +1191,8 @@ MonoBehaviour:
   _twistMin: 0
   _twistMax: 0
   _swingMin: 0
-  _swingMax: 0
-  _updateTwistSwingLimits: 0
+  _swingMax: 0.3
+  _updateTwistSwingLimits: 1
 --- !u!1 &319744859
 GameObject:
   m_ObjectHideFlags: 0
@@ -2602,6 +2602,46 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 14
   m_CollisionDetection: 0
+--- !u!1 &652660775 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 100000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+  m_PrefabInstance: {fileID: 1216856707}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &652660776
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 652660775}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1537c169f06908442bf4b9e9d72334f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _myOctopus: {fileID: 310279045}
+  _movementSpeed: 0.5
+--- !u!135 &652660777
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 652660775}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.0016804212
+  m_Center: {x: -1.1641532e-10, y: 0, z: 0}
 --- !u!1 &657459678
 GameObject:
   m_ObjectHideFlags: 0
@@ -5225,6 +5265,93 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1179814126}
   m_Mesh: {fileID: 4300002, guid: 1a6216de7989365449cc728647201f7e, type: 3}
+--- !u!1001 &1216856707
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 100000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_Name
+      value: cbt
+      objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_RootOrder
+      value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 150
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 150
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 150
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -133.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 22.84
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -67.88
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2300000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 359030d4af13a9c46b8b025e34bc4102, type: 2}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 100000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 652660777}
+    - targetCorrespondingSourceObject: {fileID: 100000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 652660776}
+  m_SourcePrefab: {fileID: 100100000, guid: 70f145abed0b4ae48acf34cbafba0570, type: 3}
 --- !u!4 &1236415040 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8795484655303537771, guid: d439f53ec8b4d5c4d9b801d4b27cd89c, type: 3}
@@ -5921,7 +6048,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _myOctopus: {fileID: 310279045}
   _mode: 1
-  _movementSpeed: 5
+  _movementSpeed: 1
   _region: {fileID: 0}
 --- !u!135 &1418656082
 SphereCollider:
