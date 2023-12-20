@@ -1,9 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using OctopusController;
 using UnityEngine;
-using OctopusController;
-
-
 
 public class IK_tentacles : MonoBehaviour
 {

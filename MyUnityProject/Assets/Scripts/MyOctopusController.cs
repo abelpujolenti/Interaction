@@ -1,12 +1,10 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
-
 
 namespace OctopusController
 {
