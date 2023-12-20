@@ -5,18 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="258d9691-274c-49c1-80ed-564bf0d7d6b3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Assets/Scripts/Route.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.MyUnityProject/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.MyUnityProject/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/BezierCurves.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/BezierCurves.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Route.cs.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/IK_Scorpion.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/IK_Scorpion.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/IK_tentacles.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/IK_tentacles.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/LightBlink.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/LightBlink.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/MovingTarget.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/MovingTarget.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/MyOctopusController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/MyOctopusController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/MyScorpionController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/MyScorpionController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/MyTentacleController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/MyTentacleController.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/NotifyRegion.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/NotifyRegion.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/Route.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Route.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,27 +34,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Attach to Unity Editor.Attach to Unity Editor.executor&quot;: &quot;Debug&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/Route&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Attach to Unity Editor.Attach to Unity Editor.executor": "Debug",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "feature/CharacterAnimation",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;rider.external.source.directories&quot;: [
-      &quot;C:\\Users\\abelp\\AppData\\Roaming\\JetBrains\\Rider2023.3\\resharper-host\\DecompilerCache&quot;,
-      &quot;C:\\Users\\abelp\\AppData\\Roaming\\JetBrains\\Rider2023.3\\resharper-host\\SourcesCache&quot;,
-      &quot;C:\\Users\\abelp\\AppData\\Local\\Symbols\\src&quot;
+  "keyToStringList": {
+    "rider.external.source.directories": [
+      "C:\\Users\\abelp\\AppData\\Roaming\\JetBrains\\Rider2023.3\\resharper-host\\DecompilerCache",
+      "C:\\Users\\abelp\\AppData\\Roaming\\JetBrains\\Rider2023.3\\resharper-host\\SourcesCache",
+      "C:\\Users\\abelp\\AppData\\Local\\Symbols\\src"
     ]
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected="Attach to Unity Editor.Attach to Unity Editor">
     <configuration name="Start Unity" type="RunUnityExe" factoryName="Unity Executable">
       <option name="EXE_PATH" value="C:\Program Files\Unity\Hub\Editor\2022.3.3f1\Editor\Unity.exe" />
@@ -116,7 +107,7 @@
       <workItem from="1703008477309" duration="4532000" />
       <workItem from="1703014576869" duration="3108000" />
       <workItem from="1703082745001" duration="44000" />
-      <workItem from="1703082799531" duration="11465000" />
+      <workItem from="1703082799531" duration="12225000" />
     </task>
     <servers />
   </component>

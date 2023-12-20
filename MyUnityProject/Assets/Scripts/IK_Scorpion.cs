@@ -12,15 +12,12 @@ public class IK_Scorpion : MonoBehaviour
     public IK_tentacles _myOctopus;
 
     [Header("Body")]
-    float animTime;
-    public float animDuration;
     bool animPlaying;
     public Transform Body;
     public Transform EndPos;
     public Transform _pointToLookAt;
     public float speedToRotate;
     public float speedToMove;
-    public float speedToElevate;
     private Vector3 _normalRotationVector;
     private Vector3 _desiredBodyPosition;
     public Transform _pointToFollow;
@@ -62,15 +59,11 @@ public class IK_Scorpion : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(animPlaying)
-            animTime += Time.deltaTime;
-
         NotifyTailTarget();
         
         if (Input.GetKeyDown(KeyCode.Space))
         {
             NotifyStartWalk();
-            animTime = 0;
             animPlaying = true;
         }
         
@@ -105,20 +98,20 @@ public class IK_Scorpion : MonoBehaviour
 
     private void UpdateBodyRotation()
     {
+        Vector3 vectorToFollow = (_desiredBodyPosition - Body.position).normalized;
+        float cosine = Vector3.Dot(-Body.forward, vectorToFollow);
+        float angle = _myController.Rad2Deg(Mathf.Acos(cosine));
+        Vector3 crossVector = Vector3.Cross(-Body.forward, vectorToFollow);
+        Body.rotation = Quaternion.AngleAxis(angle, crossVector) * Body.rotation;
+        
         _normalRotationVector = _myController.GetMedianNormalTerrain();
 
         _pointToLookAt.position = Vector3.Lerp(_pointToLookAt.position, _normalRotationVector + Body.position, speedToRotate * Time.deltaTime);
         
         Vector3 vectorToPointToLookAt = (_pointToLookAt.position - Body.position).normalized;
-        float cosine = Vector3.Dot(Body.up, vectorToPointToLookAt);
-        float angle = _myController.Rad2Deg(Mathf.Acos(cosine));
-        Vector3 crossVector = Vector3.Cross(Body.up, vectorToPointToLookAt);
-        Body.rotation = Quaternion.AngleAxis(angle, crossVector) * Body.rotation;
-
-        Vector3 vectorToFollow = (_desiredBodyPosition - Body.position).normalized;
-        cosine = Vector3.Dot(-Body.forward, vectorToFollow);
+        cosine = Vector3.Dot(Body.up, vectorToPointToLookAt);
         angle = _myController.Rad2Deg(Mathf.Acos(cosine));
-        crossVector = Vector3.Cross(-Body.forward, vectorToFollow);
+        crossVector = Vector3.Cross(Body.up, vectorToPointToLookAt);
         Body.rotation = Quaternion.AngleAxis(angle, crossVector) * Body.rotation;
     }
 

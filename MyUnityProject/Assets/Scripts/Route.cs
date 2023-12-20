@@ -1,11 +1,12 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class Route : MonoBehaviour
 {
     [SerializeField] private Transform[] _points;
     [SerializeField] private Transform[] _firstTangents;
     [SerializeField] private Transform[] _secondTangents;
-    [SerializeField] private Transform _scorpionBodyPosition;
+    [SerializeField] private Transform _pointToFollow;
 
     [SerializeField] private float maxTimeAnimation;
 
@@ -23,7 +24,7 @@ public class Route : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _scorpionBodyPosition.position = _points[0].position;
+        _pointToFollow.position = _points[0].position;
         _exteriorSegmentPoints = new Vector3[_points.Length - 1][];
         _midSegmentPoints = new Vector3[_points.Length - 1][];
         _interiorSegmentPoints = new Vector3[_points.Length - 1];
@@ -81,7 +82,7 @@ public class Route : MonoBehaviour
         
         InteriorSegments();
 
-        _scorpionBodyPosition.position = _interiorSegmentPoints[_currentCurve];
+        _pointToFollow.position = _interiorSegmentPoints[_currentCurve];
     }
 
     private void ExteriorSegments()
