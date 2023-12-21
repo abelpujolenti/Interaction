@@ -1,7 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.IMGUI.Controls;
 using UnityEditor.SceneManagement;
+using UnityEditorInternal;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class MovingBall : MonoBehaviour
 {
@@ -13,90 +16,90 @@ public class MovingBall : MonoBehaviour
     [SerializeField]
     private float _movementSpeed = 5f;
 
-    List<Force> forces = new List<Force>();
-    float mass = 5f;
-    Vector3 linearMomentum = Vector3.zero;
-    Vector3 angularMomentum = Vector3.zero;
-    float linearDamping = 0.99f;
-    float angularDamping = 0.99f;
-    Vector3 gravity = new Vector3(0f, -30f, 0f);
-    float airDensity = 1.293f;
-    float radius;
+    [SerializeField] private ForceCanvas _forceCanvas;
+
+    [SerializeField] private Transform _onPrefab;
+    [SerializeField] private Transform _offPrefab;
+    [SerializeField] private Transform _greenArrowPrefab;
+    [SerializeField] private Transform _redArrowPrefab;
+
+    RigidBodyState _state = new RigidBodyState();
+
+    Transform preview;
 
     void Start()
     {
-        radius = GetComponent<SphereCollider>().radius * 10f;
+        preview = transform.parent.Find("Preview");
+        _state.radius = GetComponent<SphereCollider>().radius * 10f;
         //ApplyForce(new Vector3(0f, 0f, -10000f), new Vector3(-126.775002f, 21.5470009f, -39.1300011f));
+    }
+
+    private void OnGUI()
+    {
+        Force force = new Force(new Vector3(-126.775002f, 21.7f, -39.1300011f), new Vector3(0f, 0f, -10000f));
+        Event e = Event.current;
+        if (!e.isKey || !(e.type == EventType.KeyDown)) return;
+
+        if (e.keyCode == KeyCode.Z)
+        {
+            _forceCanvas.SetEffectSliderValue(_forceCanvas.GetEffectSliderValue() - 15f);
+        }
+        else if (e.keyCode == KeyCode.X)
+        {
+            _forceCanvas.SetEffectSliderValue(_forceCanvas.GetEffectSliderValue() + 15f);
+        }
+        else if (e.keyCode == KeyCode.I)
+        {
+            preview.gameObject.SetActive(!preview.gameObject.activeSelf);
+            GeneratePreview(force, 100, Time.fixedDeltaTime);
+        }
+        else if (e.keyCode == KeyCode.S)
+        {
+            _state.ApplyForce(force);
+            _state.update = true;
+        }
     }
 
     void FixedUpdate()
     {
-        linearMomentum = UpdateLinearMomentum();
-        angularMomentum = UpdateAngularMomentum();
-        forces.Clear();
+        if (!_state.update) return;
 
-        transform.position = UpdatePosition();
-        transform.rotation = UpdateRotation();
+        _state.UpdateState(transform, true, Time.fixedDeltaTime);
     }
-    private Quaternion UpdateRotation()
+
+    private void GeneratePreview(Force force, int arrowAmount, float dt)
     {
-        Vector3 angularVelocity = CalculateAngularVelocity();
-        Vector3 w = angularVelocity * Time.deltaTime;
-        Quaternion q = Quaternion.AngleAxis(w.magnitude, w.normalized);
-        return transform.rotation * q;
+        ClearPreview();
+        GeneratePreviewArrows(_onPrefab, force, true, arrowAmount, dt);
+        GeneratePreviewArrows(_offPrefab, force, false, arrowAmount, dt);
     }
-    private Vector3 CalculateAngularVelocity()
+
+    private void GeneratePreviewArrows(Transform arrowPrefab, Force force, bool applyMagnus, int arrowAmount, float dt)
     {
-        //inverse moment of inertia tensor
-        Matrix3x3 mat = new Matrix3x3(1f / (0.4f * radius * radius * mass));
-        //w = Inv(I) * L
-        return mat.MultiplyByVector3(angularMomentum);
-    }
-    private Vector3 CalculateLinearVelocity()
-    {
-        return linearMomentum / mass;
-    }
-    private Vector3 UpdatePosition()
-    {
-        return transform.position + (CalculateLinearVelocity()) * Time.fixedDeltaTime;
-    }
-    private Vector3 UpdateLinearMomentum()
-    {
-        //external forces
-        Vector3 force = Vector3.zero;
-        foreach(Force f in forces)
+        RigidBodyState state = new RigidBodyState();
+        state.radius = _state.radius;
+        state.ApplyForce(force);
+        Transform currArrow = Instantiate(arrowPrefab, preview.transform.position, Quaternion.identity, preview);
+        Transform lmao = new GameObject().transform;
+        lmao.position = preview.position;
+        lmao.rotation = preview.rotation;
+        for (int i = 0; i < arrowAmount; i++)
         {
-            force += f.vector;
+            state.UpdateState(lmao, applyMagnus, dt);
+            Transform prevArrow = currArrow;
+            currArrow = Instantiate(arrowPrefab, lmao.transform.position, Quaternion.identity, preview);
+            //Quaternion r = Quaternion.LookRotation(currArrow.position - prevArrow.position);
+            //currArrow.rotation = r;
         }
-
-        //magnus
-        var direction = Vector3.Cross(CalculateAngularVelocity(), CalculateLinearVelocity());
-        var magnitude = 4 / 3f * Mathf.PI * airDensity * Mathf.Pow(radius, 3);
-        force += direction * magnitude;
-
-        //gravity
-        force += gravity;
-
-        return (linearMomentum + force * Time.fixedDeltaTime) * linearDamping;
+        Destroy(lmao.gameObject);
     }
-    private Vector3 UpdateAngularMomentum()
+
+    private void ClearPreview()
     {
-        return (angularMomentum + CalculateTorque() * Time.fixedDeltaTime) * angularDamping;
-    }
-    private Vector3 CalculateTorque()
-    {
-        Vector3 torque = Vector3.zero;
-        foreach (Force f in forces)
+        for (int i = 0; i < preview.childCount; i++)
         {
-            Vector3 r = f.position - transform.position;
-            torque += Vector3.Cross(r, f.vector);
+            Destroy(preview.GetChild(i).gameObject);
         }
-        return torque;
-    }
-
-    public void ApplyForce(Vector3 force, Vector3 position)
-    {
-        forces.Add(new Force(position, force));
     }
 
     private void OnCollisionEnter(Collision collision)
