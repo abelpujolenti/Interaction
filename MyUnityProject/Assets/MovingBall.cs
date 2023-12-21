@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
@@ -22,6 +23,10 @@ public class MovingBall : MonoBehaviour
     [SerializeField] private Transform _offPrefab;
     [SerializeField] private Transform _greenArrowPrefab;
     [SerializeField] private Transform _redArrowPrefab;
+    [SerializeField] private Transform _whiteArrowPrefab;
+
+    [SerializeField] private Transform _forceArrow;
+    [SerializeField] private Transform _velocityArrow;
 
     RigidBodyState _state = new RigidBodyState();
 
@@ -57,6 +62,8 @@ public class MovingBall : MonoBehaviour
         {
             _state.ApplyForce(force);
             _state.update = true;
+            _forceArrow.gameObject.SetActive(true);
+            _velocityArrow.gameObject.SetActive(true);
         }
     }
 
@@ -65,6 +72,11 @@ public class MovingBall : MonoBehaviour
         if (!_state.update) return;
 
         _state.UpdateState(transform, true, Time.fixedDeltaTime);
+
+        if (_forceArrow.gameObject.activeSelf && _state.magnusForce != Vector3.zero) 
+            _forceArrow.rotation = Quaternion.LookRotation(_state.magnusForce);
+        if (_velocityArrow.gameObject.activeSelf && _state.linearMomentum != Vector3.zero)
+            _velocityArrow.rotation = Quaternion.LookRotation(_state.linearMomentum);
     }
 
     private void GeneratePreview(Force force, int arrowAmount, float dt)
@@ -79,18 +91,18 @@ public class MovingBall : MonoBehaviour
         RigidBodyState state = new RigidBodyState();
         state.radius = _state.radius;
         state.ApplyForce(force);
-        Transform currArrow = Instantiate(arrowPrefab, preview.transform.position, Quaternion.identity, preview);
+        Transform startArrow = Instantiate(_whiteArrowPrefab, preview.transform.position, Quaternion.identity, preview);
         Transform lmao = new GameObject().transform;
         lmao.position = preview.position;
         lmao.rotation = preview.rotation;
+        Transform[] points = new Transform[arrowAmount];
         for (int i = 0; i < arrowAmount; i++)
         {
             state.UpdateState(lmao, applyMagnus, dt);
-            Transform prevArrow = currArrow;
-            currArrow = Instantiate(arrowPrefab, lmao.transform.position, Quaternion.identity, preview);
-            //Quaternion r = Quaternion.LookRotation(currArrow.position - prevArrow.position);
-            //currArrow.rotation = r;
+            points[i] = Instantiate(arrowPrefab, lmao.transform.position, Quaternion.identity, preview);
         }
+        Quaternion r = Quaternion.LookRotation(points[0].position - startArrow.position);
+        startArrow.rotation = r;
         Destroy(lmao.gameObject);
     }
 

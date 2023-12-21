@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 23832057483004712}
   - component: {fileID: 95470614410226304}
   m_Layer: 0
-  m_Name: arrow_red
+  m_Name: arrow_gray
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -62,7 +62,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5636c303ecf4ef448bd4293753f20c80, type: 2}
+  - {fileID: 2100000, guid: 456609e2144eff74cb701eb79f642429, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

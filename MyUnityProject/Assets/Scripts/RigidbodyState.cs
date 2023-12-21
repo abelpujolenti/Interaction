@@ -15,6 +15,8 @@ public class RigidBodyState
     public float radius = 1f;
     public bool update = false;
 
+    public Vector3 magnusForce = Vector3.zero;
+
     public void UpdateState(Transform t, bool applyMagnus, float dt)
     {
         linearMomentum = UpdateLinearMomentum(applyMagnus, dt);
@@ -61,7 +63,8 @@ public class RigidBodyState
         {
             var direction = Vector3.Cross(CalculateAngularVelocity(), CalculateLinearVelocity());
             var magnitude = 4 / 3f * Mathf.PI * airDensity * Mathf.Pow(radius, 3);
-            force += direction * magnitude;
+            magnusForce = direction * magnitude;
+            force += magnusForce;
         }
 
         //gravity
