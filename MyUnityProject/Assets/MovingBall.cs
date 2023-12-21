@@ -26,6 +26,7 @@ public class MovingBall : MonoBehaviour
     void Start()
     {
         radius = GetComponent<SphereCollider>().radius * 10f;
+        //ApplyForce(new Vector3(0f, 0f, -10000f), new Vector3(-126.775002f, 21.5470009f, -39.1300011f));
     }
 
     void FixedUpdate()
