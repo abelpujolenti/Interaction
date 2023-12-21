@@ -42,7 +42,7 @@ public class Route : MonoBehaviour
     {
         if (!_play)
         {
-            if (!Input.GetKeyDown(KeyCode.Space))
+            if (!Input.GetKeyUp(KeyCode.Space))
             {
                 return;
             }
@@ -70,12 +70,7 @@ public class Route : MonoBehaviour
     }
 
     private void BezierCurve()
-    {
-        Debug.DrawLine(_points[_currentCurve].position, _firstTangents[_currentCurve].position, Color.white);
-        Debug.DrawLine(_firstTangents[_currentCurve].position, _secondTangents[_currentCurve].position, Color.white);
-        Debug.DrawLine(_secondTangents[_currentCurve].position, _points[_currentCurve + 1].position, Color.white);
-        
-        
+    {         
         ExteriorSegments();
         
         MidSegments();
@@ -95,9 +90,6 @@ public class Route : MonoBehaviour
         
         _exteriorSegmentPoints[_currentCurve][2] = Vector3.Lerp(_secondTangents[_currentCurve].position,
             _points[_currentCurve + 1].position, _timeLerp);
-        
-        Debug.DrawLine(_exteriorSegmentPoints[_currentCurve][0], _exteriorSegmentPoints[_currentCurve][1], Color.green);
-        Debug.DrawLine(_exteriorSegmentPoints[_currentCurve][1], _exteriorSegmentPoints[_currentCurve][2], Color.green);
     }
 
     private void MidSegments()
@@ -107,8 +99,6 @@ public class Route : MonoBehaviour
         
         _midSegmentPoints[_currentCurve][1] = Vector3.Lerp(_exteriorSegmentPoints[_currentCurve][1],
             _exteriorSegmentPoints[_currentCurve][2], _timeLerp);
-        
-        Debug.DrawLine(_midSegmentPoints[_currentCurve][0], _midSegmentPoints[_currentCurve][1], Color.red);
     }
 
     private void InteriorSegments()
