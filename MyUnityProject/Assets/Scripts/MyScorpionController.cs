@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 namespace OctopusController
 {
@@ -7,9 +8,9 @@ namespace OctopusController
     public class MyScorpionController
     {
         //TAIL CONSTS
-        private const float DELTA = 0.05f;
-        private const float SPEED = 10;
-        private const float DISTANCE_TO_TARGET_THRESHOLD = 0.05f;
+        private const float DECELERATION = 0.5f;
+        private const float MAXIMUM_DISTANCE_TO_TARGET_THRESHOLD = 0.05f;
+        private const float MINIMUM_DISTANCE_TO_TARGET_THRESHOLD = 0.05f;
 
         //LEGS CONSTS
         private const float MAXIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD = 0.2f;
@@ -35,12 +36,15 @@ namespace OctopusController
         float[] _tailVirtualJointRotations;
 
         float _tailSize;
+        float _initialDelta = 0.05f;
+        float _currentDelta;
+        float _speed = 10;
 
         Vector3[] _tailJointsRelativePositions;
 
         Vector3 _tailCurrentEndEffectorPosition;
 
-        bool _startTailAnimation;
+        bool _activeTailAnimation;
 
         //LEGS
         MyTentacleController[] _legs = new MyTentacleController[6];
@@ -66,13 +70,16 @@ namespace OctopusController
 
         public void UpdateIK()
         {
-
             if (_startLegsAnimation)
             {
                 UpdateLegs();
             }
-            if (!_startTailAnimation)
+            if (!_activeTailAnimation)
             {
+                return;
+            }
+            if (Vector3.Distance(_tailTarget.position, _tailCurrentEndEffectorPosition) < MINIMUM_DISTANCE_TO_TARGET_THRESHOLD)
+            {                
                 return;
             }
             UpdateTail();
@@ -418,19 +425,25 @@ namespace OctopusController
         {
             if (Vector3.Distance(_tail.Bones[0].position, target.position) < _tailSize)
             {
-                _startTailAnimation = true;
+                _currentDelta = _initialDelta;
+                _activeTailAnimation = true;
                 _tailTarget = target;
                 return;
             }
-            _startTailAnimation = false;
+            _activeTailAnimation = false;
         }
 
         //TODO: implement Gradient Descent method to move tail if necessary
         private void UpdateTail()
         {
+
+            float lerpValue = Map((_tailTarget.position - _tailCurrentEndEffectorPosition).magnitude, _tailSize, 0, 0, 1);
+
+            _currentDelta = Mathf.Lerp(_initialDelta, 0, lerpValue);
+
             for (int i = 0; i < _tail.Bones.Length; i++)
             {
-                if ((_tailTarget.position - _tailCurrentEndEffectorPosition).magnitude <= DISTANCE_TO_TARGET_THRESHOLD)
+                if ((_tailTarget.position - _tailCurrentEndEffectorPosition).magnitude <= MAXIMUM_DISTANCE_TO_TARGET_THRESHOLD)
                 {
                     return;
                 }
@@ -453,7 +466,7 @@ namespace OctopusController
         {
             for (int i = 0; i < _tail.Bones.Length; i++)
             {
-                _tailCurrentJointRotations[i] -= SPEED * _tailVirtualJointRotations[i];
+                _tailCurrentJointRotations[i] -= _speed * _tailVirtualJointRotations[i];
             }
         }
 
@@ -472,11 +485,11 @@ namespace OctopusController
         {
             float currentDistanceBetweenEndEffectorAndTarget = ErrorFunction();
             float currentAngle = _tailCurrentJointRotations[index];
-            _tailCurrentJointRotations[index] += DELTA;
+            _tailCurrentJointRotations[index] += _currentDelta;
             float nextDistanceBetweenEndEffectorAndTarget = ErrorFunction();
             _tailCurrentJointRotations[index] = currentAngle;
 
-            float gradient = (nextDistanceBetweenEndEffectorAndTarget - currentDistanceBetweenEndEffectorAndTarget) / DELTA;
+            float gradient = (nextDistanceBetweenEndEffectorAndTarget - currentDistanceBetweenEndEffectorAndTarget) / _currentDelta;
 
             _tailVirtualJointRotations[index] = gradient;
         }
