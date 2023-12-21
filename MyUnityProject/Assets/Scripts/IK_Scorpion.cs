@@ -4,12 +4,15 @@ using UnityEngine.Serialization;
 
 public class IK_Scorpion : MonoBehaviour
 {
+    private const float FORCE_BAR_SPEED = 7f;
     private const int LAYER_TERRAIN = 6;
     private const int LAYER_MASK_TERRAIN = 1 << LAYER_TERRAIN;
     
     MyScorpionController _myController= new MyScorpionController();
 
     public IK_tentacles _myOctopus;
+
+    [SerializeField] private ForceCanvas _forceCanvas;
 
     [Header("Body")]
     bool animPlaying;
@@ -22,10 +25,13 @@ public class IK_Scorpion : MonoBehaviour
     private Vector3 _desiredBodyPosition;
     public Transform _pointToFollow;
     private float _distanceToFloor;
+    private bool _charging;
 
     [Header("Tail")]
     public Transform tailTarget;
     public Transform tail;
+    private float _forceStrength;
+    private float _forceValue;
 
     [Header("Legs")]
     public Transform[] legs;
@@ -44,8 +50,6 @@ public class IK_Scorpion : MonoBehaviour
         RaycastHit hit = RaycastToTerrain();
 
         _distanceToFloor = (hit.point - _pointToFollow.position).magnitude;
-        
-        Debug.Log(_distanceToFloor);
     }
 
     private RaycastHit RaycastToTerrain()
@@ -63,6 +67,19 @@ public class IK_Scorpion : MonoBehaviour
         
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            _charging = true;
+        }
+
+        if (_charging)
+        {
+            _forceStrength += Time.deltaTime * FORCE_BAR_SPEED;
+            _forceValue = Mathf.Abs(Mathf.Sin(_forceStrength));
+            _forceCanvas.SetForceSliderValue(_forceValue);
+        }
+
+        if (Input.GetKeyUp(KeyCode.Space)) {
+
+            _charging = false;
             NotifyStartWalk();
             animPlaying = true;
         }
@@ -124,6 +141,6 @@ public class IK_Scorpion : MonoBehaviour
     //Trigger Function to start the walk animation
     public void NotifyStartWalk()
     {
-        _myController.NotifyStartWalk();
+        _myController.NotifyStartWalk(_forceValue, _forceCanvas.GetEffectSliderValue());
     }
 }
