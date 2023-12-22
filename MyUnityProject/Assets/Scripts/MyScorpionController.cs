@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.SymbolStore;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
-
+using static UnityEngine.GraphicsBuffer;
 
 namespace OctopusController
 {
@@ -13,9 +8,9 @@ namespace OctopusController
     public class MyScorpionController
     {
         //TAIL CONSTS
-        private const float DELTA = 0.05f;
-        private const float SPEED = 10;
-        private const float DISTANCE_TO_TARGET_THRESHOLD = 0.05f;
+        private const float SPEED = 30;
+        private const float MAXIMUM_DISTANCE_TO_TARGET_THRESHOLD = 0.05f;
+        private const float MINIMUM_DISTANCE_TO_TARGET_THRESHOLD = 0.3f;
 
         //LEGS CONSTS
         private const float MAXIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD = 0.2f;
@@ -25,6 +20,8 @@ namespace OctopusController
         private const float TIME_TO_MOVE_LEG = 0.2f;
         private const float MAXIMUM_HEIGHT_TO_FOOT = 0.3f;
         private const int MAXIMUM_ITERATIONS_FABRIK = 20;
+        private const int LAYER_TERRAIN = 6;
+        private const int LAYER_MASK_TERRAIN = 1 << LAYER_TERRAIN;
 
 
         //TAIL
@@ -39,25 +36,33 @@ namespace OctopusController
         float[] _tailVirtualJointRotations;
 
         float _tailSize;
+        float _initialDelta = 0.05f;
+        float _currentDelta;
+        float _forceStrength = 10;
+        float _effectStrength = 10;
+        float _ballRadius;
+        float _hitDistance;
 
         Vector3[] _tailJointsRelativePositions;
 
         Vector3 _tailCurrentEndEffectorPosition;
 
-        bool _startTailAnimation;
+        bool _activeTailAnimation;
 
         //LEGS
         MyTentacleController[] _legs = new MyTentacleController[6];
 
         Transform[] _legTargets;
-        Transform[] _legFutureBases;
+        Transform[] _legFutureBasesRayCasts;
 
+        Vector3[] _desiredFutureBases;
         Vector3[] _currentFeetBases;
         Vector3[] _lastFeetBases;
+        Vector3[] _legsTerrainNormal;
 
         float[][] _distanceBetweenJoints;
         float[] _legsLength;
-        float[] _legsPositionZLerp;
+        float[] _legsPositionXZLerp;
         float[] _legsPositionYLerp;
 
         bool[] _legsReachCeil;
@@ -66,45 +71,69 @@ namespace OctopusController
 
         bool active = true;
 
-        public bool UpdateIK()
-        {
-            if (!active)
-            {
-                return active;
-            }
+        bool shot = false;
 
+        public void UpdateIK()
+        {
             if (_startLegsAnimation)
             {
                 UpdateLegs();
             }
-            if (!_startTailAnimation)
+            if (!_activeTailAnimation)
             {
-                return active;
+                return;
+            }
+            if (Vector3.Distance(_tailTarget.position, _tailCurrentEndEffectorPosition) < MINIMUM_DISTANCE_TO_TARGET_THRESHOLD)
+            {
+                if (!shot)
+                {
+                    Vector3 force = new Vector3(0f, 0f, - Map(_forceStrength, 0, 1, 6000, 8500));
+                    _tailTarget.GetComponent<MovingBall>().Shoot(new Force(_tailCurrentEndEffectorPosition, force));
+                    shot = true;
+                }
+                return;
             }
             UpdateTail();
-            return active;
         }
+
+        #region Body
+
+        public Vector3 GetMedianNormalTerrain() {
+
+            Vector3 medianVector = Vector3.zero;
+
+            for (int i = 0; i < _legsTerrainNormal.Length; i++)
+            {
+                medianVector += _legsTerrainNormal[i];
+            }
+
+            return medianVector / _legsTerrainNormal.Length;
+        }
+
+        #endregion
 
         #region Legs
 
-        public void InitLegs(Transform[] LegRoots, Transform[] LegFutureBases, Transform[] LegTargets)
+        public void InitLegs(Transform[] LegRoots, Transform[] LegFutureBasesRaysCasts, Transform[] LegTargets)
         {
             _legs = new MyTentacleController[LegRoots.Length];
-            _legFutureBases = new Transform[LegFutureBases.Length];
+            _legFutureBasesRayCasts = new Transform[LegFutureBasesRaysCasts.Length];
             _legTargets = new Transform[LegTargets.Length];
             _legsLength = new float[LegRoots.Length];
             _distanceBetweenJoints = new float[LegRoots.Length][];
-            _currentFeetBases = new Vector3[LegFutureBases.Length];
-            _lastFeetBases = new Vector3[LegFutureBases.Length];
-            _legsPositionZLerp = new float[LegRoots.Length];
+            _desiredFutureBases = new Vector3[LegFutureBasesRaysCasts.Length];
+            _currentFeetBases = new Vector3[LegFutureBasesRaysCasts.Length];
+            _lastFeetBases = new Vector3[LegFutureBasesRaysCasts.Length];
+            _legsPositionXZLerp = new float[LegRoots.Length];
             _legsPositionYLerp = new float[LegRoots.Length];
             _legsReachCeil = new bool[LegRoots.Length];
             _moveLegs = new bool[LegRoots.Length];
+            _legsTerrainNormal = new Vector3[LegRoots.Length];
             //Legs init
 
             for (int i = 0; i < LegRoots.Length; i++)
             {
-                InitializeLegsValues(LegRoots, LegFutureBases, LegTargets, i);
+                InitializeLegsValues(LegRoots, LegFutureBasesRaysCasts, LegTargets, i);
                 if (i % 2 == 0)
                 {
                     continue;
@@ -113,16 +142,18 @@ namespace OctopusController
             }
         }
 
-        private void InitializeLegsValues(Transform[] LegRoots, Transform[] LegFutureBases, Transform[] LegTargets, int index)
+        private void InitializeLegsValues(Transform[] LegRoots, Transform[] LegFutureBasesRayCasts, Transform[] LegTargets, int index)
         {
             _legs[index] = new MyTentacleController();
             _legs[index].LoadTentacleJoints(LegRoots[index].GetChild(0), TentacleMode.LEG);
-            _legFutureBases[index] = LegFutureBases[index];
+            _legFutureBasesRayCasts[index] = LegFutureBasesRayCasts[index];
             _legTargets[index] = LegTargets[index];
             _distanceBetweenJoints[index] = new float[_legs[index].Bones.Length];
-            _legsPositionZLerp[index] = 0;
+            _legsPositionXZLerp[index] = 0;
             _legsPositionYLerp[index] = 0;
             _currentFeetBases[index] = _legs[index].Bones[0].position;
+            
+            RayCastToTerrain(index);
 
             Transform[] bones = _legs[index].Bones;
 
@@ -148,35 +179,23 @@ namespace OctopusController
         }
 
         //TODO: Notifies the start of the walking animation
-        public void NotifyStartWalk()
+        public void NotifyStartWalk(float forceStrength, float effectStrength)
         {
+            _forceStrength = forceStrength;
+            _effectStrength = effectStrength;
             _startLegsAnimation = true;
         }
 
         //TODO: implement fabrik method to move legs 
         private void UpdateLegs()
         {
-            int legToCheckMovement;
-            int auxInt;
-            
             for (int i = 0; i < _legs.Length; i++)
             {
-                auxInt = i % 2;
-                if (auxInt == 0)
+                RayCastToTerrain(i);
+                
+                if (CanMoveLeg(i))
                 {
-                    auxInt = 1;
-                }
-                else
-                {
-                    auxInt = -1;
-                }
-
-                legToCheckMovement = i + auxInt;
-
-                if (!_moveLegs[legToCheckMovement])
-                {
-                    if ((_legFutureBases[i].position - _currentFeetBases[i]).magnitude > MAXIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD && 
-                        !_moveLegs[i])
+                    if (HasToMoveLeg(i))
                     {
                         _lastFeetBases[i] = _currentFeetBases[i];
                         _moveLegs[i] = true;    
@@ -184,29 +203,14 @@ namespace OctopusController
                 
                     if (_moveLegs[i])
                     {
-                        _legsPositionZLerp[i] += Time.deltaTime;
+                        UpdateLerps(i);
+                        
+                        UpdateCurrentFootBase(i);
 
-                        if (!_legsReachCeil[i])
+                        if (HasToStopLeg(i))
                         {
-                            _legsReachCeil[i] = _legsPositionYLerp[i] >= TIME_TO_MOVE_LEG;
-                        }
-
-                        if (_legsReachCeil[i])
-                        {
-                            _legsPositionYLerp[i] -= Time.deltaTime * 2;   
-                        }
-                        else
-                        {
-                            _legsPositionYLerp[i] += Time.deltaTime * 2;
-                        }
-                    
-                        _currentFeetBases[i].z = Mathf.Lerp(_lastFeetBases[i].z, _legFutureBases[i].position.z, _legsPositionZLerp[i] / TIME_TO_MOVE_LEG);
-                        _currentFeetBases[i].y = Mathf.Lerp(_lastFeetBases[i].y,  _lastFeetBases[i].y + MAXIMUM_HEIGHT_TO_FOOT, _legsPositionYLerp[i] / TIME_TO_MOVE_LEG);
-
-                        if ((_legFutureBases[i].position - _currentFeetBases[i]).magnitude < MINIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD)
-                        {
-                            _currentFeetBases[i] = _legFutureBases[i].position;
-                            _legsPositionZLerp[i] = 0;
+                            _currentFeetBases[i] = _desiredFutureBases[i];
+                            _legsPositionXZLerp[i] = 0;
                             _legsPositionYLerp[i] = 0;
                             _legsReachCeil[i] = false;
                             _moveLegs[i] = false;
@@ -216,6 +220,76 @@ namespace OctopusController
                 
                 UpdateLegPos(_legs[i].Bones, _legs[i].EndEffector, i);
             }
+        }
+
+        private bool CanMoveLeg(int index)
+        {
+            int auxInt = index % 2;
+            if (auxInt == 0)
+            {
+                auxInt = 1;
+            }
+            else
+            {
+                auxInt = -1;
+            }
+            
+            int legToCheckMovement = index + auxInt; 
+
+            return !_moveLegs[legToCheckMovement];
+        }
+
+        private bool HasToMoveLeg(int index)
+        {
+            return (_desiredFutureBases[index] - _currentFeetBases[index]).magnitude >
+                   MAXIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD &&
+                   !_moveLegs[index];
+        }
+
+        private void RayCastToTerrain(int index)
+        {
+            RaycastHit hit;
+            if (!Physics.Raycast(_legFutureBasesRayCasts[index].position, -_legFutureBasesRayCasts[index].up, out hit, 1000,
+                    LAYER_MASK_TERRAIN))
+            {
+                return;
+            }
+            _legsTerrainNormal[index] = hit.normal;
+            _desiredFutureBases[index] = hit.point;
+        }
+
+        private void UpdateLerps(int index)
+        {
+            _legsPositionXZLerp[index] += Time.deltaTime;
+
+            if (!_legsReachCeil[index])
+            {
+                _legsReachCeil[index] = _legsPositionYLerp[index] >= TIME_TO_MOVE_LEG;
+            }
+
+            if (_legsReachCeil[index])
+            {
+                _legsPositionYLerp[index] -= Time.deltaTime * 2;   
+            }
+            else
+            {
+                _legsPositionYLerp[index] += Time.deltaTime * 2;
+            }
+        }
+
+        private void UpdateCurrentFootBase(int index)
+        {
+            float initialYPosition = _legsReachCeil[index] ? _desiredFutureBases[index].y : _lastFeetBases[index].y;
+            
+            _currentFeetBases[index].z = Mathf.Lerp(_lastFeetBases[index].z, _desiredFutureBases[index].z, _legsPositionXZLerp[index] / TIME_TO_MOVE_LEG);
+            _currentFeetBases[index].x = Mathf.Lerp(_lastFeetBases[index].x, _desiredFutureBases[index].x, _legsPositionXZLerp[index] / TIME_TO_MOVE_LEG);
+            _currentFeetBases[index].y = Mathf.Lerp(initialYPosition,  _desiredFutureBases[index].y + MAXIMUM_HEIGHT_TO_FOOT, _legsPositionYLerp[index] / TIME_TO_MOVE_LEG);
+        }
+
+        private bool HasToStopLeg(int index)
+        {
+            return (_desiredFutureBases[index] - _currentFeetBases[index]).magnitude <
+                   MINIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD;
         }
 
         private bool DidFootReachDestination(Transform foot, int index)
@@ -364,19 +438,25 @@ namespace OctopusController
         {
             if (Vector3.Distance(_tail.Bones[0].position, target.position) < _tailSize)
             {
-                _startTailAnimation = true;
+                _currentDelta = _initialDelta;
+                _activeTailAnimation = true;
                 _tailTarget = target;
+                _ballRadius = _tailTarget.GetComponent<SphereCollider>().radius;
                 return;
             }
-            _startTailAnimation = false;
+            _activeTailAnimation = false;
         }
 
         //TODO: implement Gradient Descent method to move tail if necessary
         private void UpdateTail()
         {
+            float lerpValue = Map((_tailTarget.position - _tailCurrentEndEffectorPosition).magnitude, _tailSize, 0, 0, 1);
+
+            _currentDelta = Mathf.Lerp(_initialDelta, 0, lerpValue);
+
             for (int i = 0; i < _tail.Bones.Length; i++)
             {
-                if ((_tailTarget.position - _tailCurrentEndEffectorPosition).magnitude <= DISTANCE_TO_TARGET_THRESHOLD)
+                if ((_tailTarget.position - _tailCurrentEndEffectorPosition).magnitude <= MAXIMUM_DISTANCE_TO_TARGET_THRESHOLD)
                 {
                     return;
                 }
@@ -399,7 +479,7 @@ namespace OctopusController
         {
             for (int i = 0; i < _tail.Bones.Length; i++)
             {
-                _tailCurrentJointRotations[i] -= SPEED * _tailVirtualJointRotations[i];
+                _tailCurrentJointRotations[i] -= _forceStrength * SPEED * _tailVirtualJointRotations[i];
             }
         }
 
@@ -418,11 +498,11 @@ namespace OctopusController
         {
             float currentDistanceBetweenEndEffectorAndTarget = ErrorFunction();
             float currentAngle = _tailCurrentJointRotations[index];
-            _tailCurrentJointRotations[index] += DELTA;
+            _tailCurrentJointRotations[index] += _currentDelta;
             float nextDistanceBetweenEndEffectorAndTarget = ErrorFunction();
             _tailCurrentJointRotations[index] = currentAngle;
 
-            float gradient = (nextDistanceBetweenEndEffectorAndTarget - currentDistanceBetweenEndEffectorAndTarget) / DELTA;
+            float gradient = (nextDistanceBetweenEndEffectorAndTarget - currentDistanceBetweenEndEffectorAndTarget) / _currentDelta;
 
             _tailVirtualJointRotations[index] = gradient;
         }
@@ -430,7 +510,10 @@ namespace OctopusController
         private float ErrorFunction()
         {
             ForwardKinematics();
-            return (_tailCurrentEndEffectorPosition - _tailTarget.position).magnitude;
+
+            _hitDistance = Map(_effectStrength, 0, 1, 0, _ballRadius / 10f);
+
+            return (_tailCurrentEndEffectorPosition - (_tailTarget.position - _tailTarget.right * _hitDistance - _tailTarget.forward * 0.3f)).magnitude;
         }
 
         private void ForwardKinematics()
@@ -454,7 +537,7 @@ namespace OctopusController
             return newMin + (value - originalMin) * (newMax - newMin) / (originalMax - originalMin);
         }
 
-        internal float Deg2Rad(float angle)
+        private float Deg2Rad(float angle)
         {
             return angle * ((float)Math.PI / 180f);
         }
