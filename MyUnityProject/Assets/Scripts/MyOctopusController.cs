@@ -78,8 +78,9 @@ namespace OctopusController
             _target = target;
         }
 
-        public void NotifyShoot()
+        public void NotifyStop()
         {
+            SetIdle();
         }
 
 
@@ -88,12 +89,12 @@ namespace OctopusController
             update_ccd();
         }
 
-        public void StopBall(Transform ballTransform)
+        public void StopBall(Transform ballTransform, Vector3 stopPosition)
         {
             _ball = ballTransform;
             for (int i = 1; i < _randomTargets.Length; i++)
             {
-                if (Vector3.Distance(ballTransform.position, _randomTargets[i].position) < 13f)
+                if (Vector3.Distance(stopPosition, _randomTargets[i].position) < 13f)
                 {
                     _targetBall[i] = true;
                 }

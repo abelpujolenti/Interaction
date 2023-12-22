@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
@@ -32,6 +33,10 @@ public class MovingBall : MonoBehaviour
 
     Transform preview;
 
+    List<Vector3> previewPointsMagnus = new List<Vector3>();
+    List<Vector3> previewPointsNormal = new List<Vector3>();
+    Vector3 goalPoint;
+
     void Start()
     {
         preview = transform.parent.Find("Preview");
@@ -48,22 +53,35 @@ public class MovingBall : MonoBehaviour
         if (e.keyCode == KeyCode.Z)
         {
             _forceCanvas.SetEffectSliderValue(_forceCanvas.GetEffectSliderValue() - 15f);
+
+            if (!preview.gameObject.activeSelf) return;
+            CalculatePreview(force, 100, Time.fixedDeltaTime);
+            GeneratePreviewPoints();
         }
         else if (e.keyCode == KeyCode.X)
         {
             _forceCanvas.SetEffectSliderValue(_forceCanvas.GetEffectSliderValue() + 15f);
+
+            if (!preview.gameObject.activeSelf) return;
+            CalculatePreview(force, 100, Time.fixedDeltaTime);
+            GeneratePreviewPoints();
         }
         else if (e.keyCode == KeyCode.I)
         {
             preview.gameObject.SetActive(!preview.gameObject.activeSelf);
-            GeneratePreview(force, 100, Time.fixedDeltaTime);
+            CalculatePreview(force, 100, Time.fixedDeltaTime);
+            GeneratePreviewPoints();
         }
         else if (e.keyCode == KeyCode.S)
         {
+            CalculatePreview(force, 100, Time.fixedDeltaTime);
+
             _state.ApplyForce(force);
             _state.update = true;
             _forceArrow.gameObject.SetActive(true);
             _velocityArrow.gameObject.SetActive(true);
+
+            _myOctopus.NotifyShoot(transform, goalPoint);
         }
     }
 
@@ -79,31 +97,54 @@ public class MovingBall : MonoBehaviour
             _velocityArrow.rotation = Quaternion.LookRotation(_state.linearMomentum);
     }
 
-    private void GeneratePreview(Force force, int arrowAmount, float dt)
+    private void CalculatePreview(Force force, int pointAmount, float dt)
     {
-        ClearPreview();
-        GeneratePreviewArrows(_onPrefab, force, true, arrowAmount, dt);
-        GeneratePreviewArrows(_offPrefab, force, false, arrowAmount, dt);
+        CalculatePreviewPoints(previewPointsMagnus, _onPrefab, force, true, pointAmount, dt);
+        CalculatePreviewPoints(previewPointsNormal, _offPrefab, force, false, pointAmount, dt);
     }
 
-    private void GeneratePreviewArrows(Transform arrowPrefab, Force force, bool applyMagnus, int arrowAmount, float dt)
+    private void GeneratePreviewPoints()
+    {
+        ClearPreview();
+
+        Transform startArrow = Instantiate(_whiteArrowPrefab, preview.transform.position, Quaternion.identity, preview);
+        Quaternion r = Quaternion.LookRotation(previewPointsMagnus[0] - startArrow.position);
+        startArrow.rotation = r;
+
+        for (int i = 0; i < previewPointsMagnus.Count; i++)
+        {
+            Instantiate(_onPrefab, previewPointsMagnus[i], Quaternion.identity, preview);
+        }
+        for (int i = 0; i < previewPointsNormal.Count; i++)
+        {
+            Instantiate(_offPrefab, previewPointsNormal[i], Quaternion.identity, preview);
+        }
+    }
+
+    private void CalculatePreviewPoints(List<Vector3> points, Transform arrowPrefab, Force force, bool applyMagnus, int pointAmount, float dt)
     {
         RigidBodyState state = new RigidBodyState();
         state.radius = _state.radius;
+
         state.ApplyForce(force);
-        Transform startArrow = Instantiate(_whiteArrowPrefab, preview.transform.position, Quaternion.identity, preview);
-        Transform lmao = new GameObject().transform;
-        lmao.position = preview.position;
-        lmao.rotation = preview.rotation;
-        Transform[] points = new Transform[arrowAmount];
-        for (int i = 0; i < arrowAmount; i++)
+
+        Transform path = new GameObject().transform;
+        path.position = preview.position;
+        path.rotation = preview.rotation;
+
+        goalPoint = Vector3.zero;
+        for (int i = 0; i < pointAmount; i++)
         {
-            state.UpdateState(lmao, applyMagnus, dt);
-            points[i] = Instantiate(arrowPrefab, lmao.transform.position, Quaternion.identity, preview);
+            state.UpdateState(path, applyMagnus, dt);
+            points.Add(path.transform.position);
+
+            if (path.transform.position.z < -70 && goalPoint == Vector3.zero)
+            {
+                goalPoint = path.transform.position;
+            }
         }
-        Quaternion r = Quaternion.LookRotation(points[0].position - startArrow.position);
-        startArrow.rotation = r;
-        Destroy(lmao.gameObject);
+
+        Destroy(path.gameObject);
     }
 
     private void ClearPreview()
@@ -116,6 +157,7 @@ public class MovingBall : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        _myOctopus.NotifyShoot();
+        _myOctopus.NotifyStop();
+        _state.ApplyForce(new Force(collision.collider.transform.position, (transform.position - collision.collider.transform.position).normalized * 7000f));
     }
 }

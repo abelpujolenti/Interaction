@@ -48,9 +48,14 @@ public class IK_tentacles : MonoBehaviour
 
     }
 
-    public void NotifyShoot()
+    public void NotifyShoot(Transform ballTransform, Vector3 stopPosition)
     {
-        _myController.NotifyShoot();
+        _myController.StopBall(ballTransform, stopPosition);
+    }
+
+    public void NotifyStop()
+    {
+        _myController.NotifyStop();
     }
 
 
