@@ -8269,7 +8269,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2028468836}
   m_LocalRotation: {x: -0.22380783, y: 0.6694717, z: -0.24531643, w: -0.6644831}
-  m_LocalPosition: {x: -106.75, y: 32.37, z: -44.55}
+  m_LocalPosition: {x: -103.76, y: 34.6, z: -48.91}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -8317,7 +8317,7 @@ MonoBehaviour:
   - {fileID: 2010806408}
   - {fileID: 620301472}
   _pointToFollow: {fileID: 1670749527}
-  maxTimeAnimation: 2
+  maxTimeAnimation: 10
 --- !u!4 &2053303417
 Transform:
   m_ObjectHideFlags: 0
@@ -8841,7 +8841,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8005202564104028491, guid: c9ae8800298c5904a805978e2ff06201, type: 3}
       propertyPath: m_Name
-      value: Scorpion
+      value: Francesco
       objectReference: {fileID: 0}
     - target: {fileID: 8005202564104028492, guid: c9ae8800298c5904a805978e2ff06201, type: 3}
       propertyPath: m_RootOrder

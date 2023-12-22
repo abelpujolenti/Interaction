@@ -78,6 +78,11 @@ public class MovingBall : MonoBehaviour
             _forceArrow.rotation = Quaternion.LookRotation(_state.magnusForce);
         if (_velocityArrow.gameObject.activeSelf && _state.linearMomentum != Vector3.zero)
             _velocityArrow.rotation = Quaternion.LookRotation(_state.linearMomentum);
+
+        if (transform.position.y < 2f || transform.position.y > 35f)
+        {
+            _myOctopus.NotifyStop();
+        }
     }
 
     public void Shoot(Force force)

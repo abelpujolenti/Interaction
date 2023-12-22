@@ -87,7 +87,7 @@ namespace OctopusController
             {
                 if (!shot)
                 {
-                    Vector3 force = new Vector3(0f, 0f, - Map(_forceStrength, 0, 1, 7000, 11000));
+                    Vector3 force = new Vector3(0f, 0f, - Map(_forceStrength, 0, 1, 6000, 8500));
                     _tailTarget.GetComponent<MovingBall>().Shoot(new Force(_tailCurrentEndEffectorPosition, force));
                     shot = true;
                 }
@@ -513,7 +513,7 @@ namespace OctopusController
 
             _hitDistance = Map(_effectStrength, 0, 1, 0, _ballRadius / 10f);
 
-            return (_tailCurrentEndEffectorPosition - (_tailTarget.position - _tailTarget.right * _hitDistance - _tailTarget.forward * 0.1f)).magnitude;
+            return (_tailCurrentEndEffectorPosition - (_tailTarget.position - _tailTarget.right * _hitDistance - _tailTarget.forward * 0.3f)).magnitude;
         }
 
         private void ForwardKinematics()

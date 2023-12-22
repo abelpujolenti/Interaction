@@ -1,10 +1,11 @@
 ﻿using OctopusController;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
 
 public class IK_Scorpion : MonoBehaviour
 {
-    private const float FORCE_BAR_SPEED = 1f;
+    private const float FORCE_BAR_SPEED = 6f;
     private const int LAYER_TERRAIN = 6;
     private const int LAYER_MASK_TERRAIN = 1 << LAYER_TERRAIN;
     
@@ -68,6 +69,11 @@ public class IK_Scorpion : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             _charging = true;
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
 
         if (_charging)
