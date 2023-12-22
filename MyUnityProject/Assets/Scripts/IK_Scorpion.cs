@@ -4,7 +4,7 @@ using UnityEngine.Serialization;
 
 public class IK_Scorpion : MonoBehaviour
 {
-    private const float FORCE_BAR_SPEED = 7f;
+    private const float FORCE_BAR_SPEED = 1f;
     private const int LAYER_TERRAIN = 6;
     private const int LAYER_MASK_TERRAIN = 1 << LAYER_TERRAIN;
     

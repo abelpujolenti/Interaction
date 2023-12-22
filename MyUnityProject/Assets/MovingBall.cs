@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using OctopusController;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -29,7 +30,7 @@ public class MovingBall : MonoBehaviour
     [SerializeField] private Transform _forceArrow;
     [SerializeField] private Transform _velocityArrow;
 
-    RigidBodyState _state = new RigidBodyState();
+    public RigidBodyState _state = new RigidBodyState();
 
     Transform preview;
 
@@ -40,13 +41,12 @@ public class MovingBall : MonoBehaviour
     void Start()
     {
         preview = transform.parent.Find("Preview");
-        _state.radius = GetComponent<SphereCollider>().radius * 10f;
+        _state.radius = 0.1f;
         //ApplyForce(new Vector3(0f, 0f, -10000f), new Vector3(-126.775002f, 21.5470009f, -39.1300011f));
     }
 
     private void OnGUI()
     {
-        Force force = new Force(new Vector3(-126.775002f, 21.7f, -39.1300011f), new Vector3(0f, 0f, -10000f));
         Event e = Event.current;
         if (!e.isKey || !(e.type == EventType.KeyDown)) return;
 
@@ -55,33 +55,16 @@ public class MovingBall : MonoBehaviour
             _forceCanvas.SetEffectSliderValue(_forceCanvas.GetEffectSliderValue() - 15f);
 
             if (!preview.gameObject.activeSelf) return;
-            CalculatePreview(force, 100, Time.fixedDeltaTime);
-            GeneratePreviewPoints();
         }
         else if (e.keyCode == KeyCode.X)
         {
             _forceCanvas.SetEffectSliderValue(_forceCanvas.GetEffectSliderValue() + 15f);
 
             if (!preview.gameObject.activeSelf) return;
-            CalculatePreview(force, 100, Time.fixedDeltaTime);
-            GeneratePreviewPoints();
         }
         else if (e.keyCode == KeyCode.I)
         {
             preview.gameObject.SetActive(!preview.gameObject.activeSelf);
-            CalculatePreview(force, 100, Time.fixedDeltaTime);
-            GeneratePreviewPoints();
-        }
-        else if (e.keyCode == KeyCode.S)
-        {
-            CalculatePreview(force, 100, Time.fixedDeltaTime);
-
-            _state.ApplyForce(force);
-            _state.update = true;
-            _forceArrow.gameObject.SetActive(true);
-            _velocityArrow.gameObject.SetActive(true);
-
-            _myOctopus.NotifyShoot(transform, goalPoint);
         }
     }
 
@@ -97,10 +80,23 @@ public class MovingBall : MonoBehaviour
             _velocityArrow.rotation = Quaternion.LookRotation(_state.linearMomentum);
     }
 
+    public void Shoot(Force force)
+    {
+        CalculatePreview(force, 100, Time.fixedDeltaTime);
+        GeneratePreviewPoints();
+
+        _state.ApplyForce(force);
+        _state.update = true;
+        _forceArrow.gameObject.SetActive(true);
+        _velocityArrow.gameObject.SetActive(true);
+
+        _myOctopus.NotifyShoot(transform, goalPoint);
+    }
+
     private void CalculatePreview(Force force, int pointAmount, float dt)
     {
-        CalculatePreviewPoints(previewPointsMagnus, _onPrefab, force, true, pointAmount, dt);
         CalculatePreviewPoints(previewPointsNormal, _offPrefab, force, false, pointAmount, dt);
+        CalculatePreviewPoints(previewPointsMagnus, _onPrefab, force, true, pointAmount, dt);
     }
 
     private void GeneratePreviewPoints()
@@ -138,7 +134,7 @@ public class MovingBall : MonoBehaviour
             state.UpdateState(path, applyMagnus, dt);
             points.Add(path.transform.position);
 
-            if (path.transform.position.z < -70 && goalPoint == Vector3.zero)
+            if (path.transform.position.z < _myOctopus.transform.position.z && goalPoint == Vector3.zero)
             {
                 goalPoint = path.transform.position;
             }
@@ -157,6 +153,7 @@ public class MovingBall : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
+        if (collision.collider.GetComponent<NotifyRegion>() == null) return;
         _myOctopus.NotifyStop();
         _state.ApplyForce(new Force(collision.collider.transform.position, (transform.position - collision.collider.transform.position).normalized * 7000f));
     }

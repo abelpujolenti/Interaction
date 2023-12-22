@@ -92,13 +92,15 @@ namespace OctopusController
         public void StopBall(Transform ballTransform, Vector3 stopPosition)
         {
             _ball = ballTransform;
+            int closest = 0;
             for (int i = 1; i < _randomTargets.Length; i++)
             {
-                if (Vector3.Distance(stopPosition, _randomTargets[i].position) < 13f)
+                if (Vector3.Distance(stopPosition, _randomTargets[i].position) < Vector3.Distance(stopPosition, _randomTargets[closest].position))
                 {
-                    _targetBall[i] = true;
+                    closest = i;
                 }
             }
+            _targetBall[closest] = true;
 
         }
 

@@ -10,7 +10,7 @@ namespace OctopusController
         //TAIL CONSTS
         private const float SPEED = 30;
         private const float MAXIMUM_DISTANCE_TO_TARGET_THRESHOLD = 0.05f;
-        private const float MINIMUM_DISTANCE_TO_TARGET_THRESHOLD = 0.05f;
+        private const float MINIMUM_DISTANCE_TO_TARGET_THRESHOLD = 0.3f;
 
         //LEGS CONSTS
         private const float MAXIMUM_DISTANCE_BETWEEN_CURRENT_BASE_TO_FUTURE_BASE_THRESHOLD = 0.2f;
@@ -71,6 +71,8 @@ namespace OctopusController
 
         bool active = true;
 
+        bool shot = false;
+
         public void UpdateIK()
         {
             if (_startLegsAnimation)
@@ -82,7 +84,13 @@ namespace OctopusController
                 return;
             }
             if (Vector3.Distance(_tailTarget.position, _tailCurrentEndEffectorPosition) < MINIMUM_DISTANCE_TO_TARGET_THRESHOLD)
-            {                
+            {
+                if (!shot)
+                {
+                    Vector3 force = new Vector3(0f, 0f, - Map(_forceStrength, 0, 1, 7000, 11000));
+                    _tailTarget.GetComponent<MovingBall>().Shoot(new Force(_tailCurrentEndEffectorPosition, force));
+                    shot = true;
+                }
                 return;
             }
             UpdateTail();
@@ -173,7 +181,7 @@ namespace OctopusController
         //TODO: Notifies the start of the walking animation
         public void NotifyStartWalk(float forceStrength, float effectStrength)
         {
-            _forceStrength = forceStrength * SPEED;
+            _forceStrength = forceStrength;
             _effectStrength = effectStrength;
             _startLegsAnimation = true;
         }
@@ -471,7 +479,7 @@ namespace OctopusController
         {
             for (int i = 0; i < _tail.Bones.Length; i++)
             {
-                _tailCurrentJointRotations[i] -= _forceStrength * _tailVirtualJointRotations[i];
+                _tailCurrentJointRotations[i] -= _forceStrength * SPEED * _tailVirtualJointRotations[i];
             }
         }
 
@@ -503,9 +511,9 @@ namespace OctopusController
         {
             ForwardKinematics();
 
-            _hitDistance = Map(_effectStrength, 0, 1, 0, _ballRadius);
+            _hitDistance = Map(_effectStrength, 0, 1, 0, _ballRadius / 10f);
 
-            return (_tailCurrentEndEffectorPosition - (_tailTarget.position + _tailTarget.right * _hitDistance)).magnitude;
+            return (_tailCurrentEndEffectorPosition - (_tailTarget.position - _tailTarget.right * _hitDistance - _tailTarget.forward * 0.1f)).magnitude;
         }
 
         private void ForwardKinematics()
