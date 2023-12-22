@@ -2797,8 +2797,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: '> Explain in this Text Canvas object, clear and simply, the requirements
-    you completed, and how to run your simulation'
+  m_Text: "Space (Hold): Charge\nSpace (Release): Start\nR: Reset \nZ/X: Spin Right/Left\nI:
+    Toggle preview"
 --- !u!222 &657459681
 CanvasRenderer:
   m_ObjectHideFlags: 0
